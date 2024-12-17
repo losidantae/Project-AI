@@ -1,0 +1,55 @@
+from scapy.all import sniff
+import threading
+import time
+
+# ตัวแปรสำหรับควบคุมการทำงานของการแสกน
+scanning_active = False
+
+# ฟังก์ชันที่ใช้ในการจับและแสดงข้อมูลของแพ็กเก็ต
+def packet_callback(packet):
+    print(packet.summary())
+
+# ฟังก์ชันสำหรับเริ่มการแสกน
+def start_sniffing():
+    global scanning_active
+    print("เริ่มการแสกนทราฟฟิค...")
+    sniff(prn=packet_callback, store=0, filter="ip")
+
+# ฟังก์ชันสำหรับหยุดการแสกน
+def stop_sniffing():
+    global scanning_active
+    print("หยุดการแสกนทราฟฟิค")
+    scanning_active = False
+
+# ฟังก์ชันสำหรับการเปิด/ปิดการแสกน
+def control_sniffing(command):
+    global scanning_active
+    if command == "start":
+        if not scanning_active:
+            scanning_active = True
+            # รันฟังก์ชันแสกนในเธรดใหม่
+            threading.Thread(target=start_sniffing).start()
+        else:
+            print("การแสกนกำลังทำงานอยู่แล้ว")
+    elif command == "stop":
+        if scanning_active:
+            stop_sniffing()
+        else:
+            print("การแสกนยังไม่เริ่มทำงาน")
+    else:
+        print("คำสั่งไม่ถูกต้อง")
+
+# ฟังก์ชันหลักที่ใช้รับคำสั่งจากผู้ใช้
+def main():
+    print("คำสั่งที่สามารถใช้ได้: start (เริ่มการแสกน), stop (หยุดการแสกน), exit (ออกจากโปรแกรม)")
+    while True:
+        command = input("กรุณาใส่คำสั่ง: ").strip().lower()
+        if command == "exit":
+            print("กำลังออกจากโปรแกรม...")
+            break
+        else:
+            control_sniffing(command)
+
+# เรียกใช้ฟังก์ชันหลัก
+if __name__ == "__main__":
+    main()
